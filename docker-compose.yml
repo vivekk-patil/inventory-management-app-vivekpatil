@@ -1,0 +1,65 @@
+services:
+  mariadb:
+    image: mariadb:10.6
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padmin"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      SITE_NAME: inventory.localhost
+      DB_HOST: mariadb
+      DB_ROOT_PASSWORD: admin
+      ADMIN_PASSWORD: admin
+      REDIS_CACHE: redis://redis:6379/0
+      REDIS_QUEUE: redis://redis:6379/1
+      FRONTEND_ORIGIN: http://localhost:8080
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - ./backend/apps/inventory_management:/home/frappe/frappe-bench/apps/inventory_management
+    ports:
+      - "8000:8000"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_ERPNEXT_API_URL: http://localhost:8000
+        VITE_ERPNEXT_API_KEY: ${ERPNEXT_API_KEY:-}
+        VITE_ERPNEXT_API_SECRET: ${ERPNEXT_API_SECRET:-}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+
+volumes:
+  mariadb-data:
+  redis-data:
+  sites:

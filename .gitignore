@@ -1,0 +1,26 @@
+# Environment / Secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Logs
+*.log
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Python packaging
+*.egg-info/

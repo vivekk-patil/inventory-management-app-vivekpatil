@@ -1,139 +1,761 @@
 # Stockroom — Inventory Management Application
 
-A simple inventory management app built for the Levelworks internship assignment:
-a **Lit** frontend talking to an **ERPNext** backend over its REST API, containerized
-with Docker so the whole thing starts with one command.
+A full-stack **Inventory Management Application** built for the **Levelworks Internship Assignment**.
 
-- Frontend: `http://localhost:8080`
-- ERPNext: `http://localhost:8000`
+The application uses a **Lit frontend**, a custom **ERPNext/Frappe backend**, and **Docker Compose** to provide a complete inventory management system that can be started locally with a single command.
 
-## Prerequisites
+---
 
-- Docker and Docker Compose v2 (`docker compose version`)
-- ~4 GB RAM free for the ERPNext/MariaDB containers
-- Ports `8000` and `8080` free on your machine
+## 🚀 Application URLs
 
-## Project structure
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| ERPNext Backend | http://localhost:8000 |
 
+> This project is designed to run locally using Docker Compose.
+
+---
+
+## ✨ Features
+
+### Admin
+
+- Add inventory items
+- Edit inventory items
+- Delete inventory items
+- Upload item images
+- Add tags
+- Add item descriptions
+- Set item date
+
+### End User
+
+- View inventory items
+- Grid view
+- List view
+- Search by item name
+- Search by description
+- Filter by tag
+- Sort by item name
+- Sort by date added
+- Ascending / descending sorting
+- Empty inventory state
+- No-search-results state
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Lit**
+- **JavaScript**
+- **Vite**
+- **Nginx**
+
+### Backend
+- **ERPNext v15**
+- **Frappe Framework**
+- **Python**
+- Custom `Inventory Item` DocType
+- ERPNext REST API
+
+### Database & Services
+- **MariaDB**
+- **Redis**
+
+### DevOps
+- **Docker**
+- **Docker Compose**
+
+---
+
+## 🏗️ Architecture
+
+```text
+                    ┌────────────────────────┐
+                    │      Lit Frontend      │
+                    │     localhost:8080     │
+                    └────────────┬───────────┘
+                                 │
+                                 │ REST API
+                                 ▼
+                    ┌────────────────────────┐
+                    │   ERPNext / Frappe     │
+                    │     localhost:8000     │
+                    │                        │
+                    │  Inventory Item DocType│
+                    └────────────┬───────────┘
+                                 │
+                     ┌───────────┴───────────┐
+                     │                       │
+                     ▼                       ▼
+              ┌─────────────┐        ┌─────────────┐
+              │   MariaDB   │        │    Redis    │
+              │  Database   │        │    Cache    │
+              └─────────────┘        └─────────────┘
 ```
+
+The frontend and backend are maintained as separate services.
+
+The Lit frontend communicates with ERPNext through its REST API.
+
+---
+
+## 📁 Project Structure
+
+```text
 .
 ├── docker-compose.yml
-├── backend/                      # ERPNext container + custom app
+├── README.md
+├── .gitignore
+│
+├── backend/
 │   ├── Dockerfile
-│   ├── init-scripts/start.sh     # site creation, app install, CORS setup
-│   └── apps/inventory_management # custom Frappe app (Inventory Item DocType)
-└── frontend/                     # Lit + Vite app, served by nginx in prod
+│   ├── init-scripts/
+│   │   └── start.sh
+│   └── apps/
+│       └── inventory_management/
+│           ├── README.md
+│           ├── hooks.py
+│           ├── modules.txt
+│           ├── requirements.txt
+│           ├── setup.py
+│           └── inventory_management/
+│               └── inventory_management/
+│                   └── doctype/
+│                       └── inventory_item/
+│                           ├── inventory_item.json
+│                           └── inventory_item.py
+│
+└── frontend/
+    ├── Dockerfile
+    ├── nginx.conf
+    ├── index.html
+    ├── package.json
+    ├── package-lock.json
+    ├── vite.config.js
     └── src/
-        ├── components/           # app-root + reusable Lit elements
-        └── services/erpnext-api.js
+        ├── main.js
+        ├── components/
+        │   ├── app-root.js
+        │   ├── confirm-dialog.js
+        │   ├── filter-bar.js
+        │   ├── item-card.js
+        │   ├── item-collection.js
+        │   ├── item-form-modal.js
+        │   ├── search-bar.js
+        │   ├── sort-bar.js
+        │   ├── toast-notification.js
+        │   └── view-toggle.js
+        ├── services/
+        │   └── erpnext-api.js
+        └── styles/
+            └── tokens.css
 ```
 
-## Setup instructions
+---
 
-### 1. First start (creates the ERPNext site)
+## ⚙️ Prerequisites
+
+Before running the application, make sure you have:
+
+- Docker Desktop
+- Docker Compose v2
+- At least **4 GB RAM** available
+- Ports **8000** and **8080** available
+
+Verify Docker Compose:
+
+```bash
+docker compose version
+```
+
+---
+
+# 🚀 Getting Started
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/vivekk-patil/inventory-management-app-vivekpatil.git
+cd inventory-management-app-vivekpatil
+```
+
+## 2. Start the Application
 
 ```bash
 docker compose up --build
 ```
 
-This will:
-- Start MariaDB and Redis
-- Build the `backend` image (official `frappe/erpnext:v15` + our custom app)
-- On first boot, create a new ERPNext site, install the `inventory_management`
-  app (which defines the **Inventory Item** DocType), enable developer mode,
-  and allow CORS from `http://localhost:8080`
-- Build and serve the Lit frontend via nginx on port 8080
+Docker Compose will start:
 
-The first boot can take **several minutes** (site creation + app install).
-Watch the `backend` logs — it's ready when you see the bench web server start.
+- MariaDB
+- Redis
+- ERPNext/Frappe backend
+- Custom Inventory Management application
+- Lit frontend
+- Nginx
 
-### 2. Connect the frontend to ERPNext (API key/secret)
+### First Startup
 
-The frontend authenticates to ERPNext's REST API with a token. After the
-backend is up:
+The first startup may take several minutes because ERPNext needs to:
 
-1. Open `http://localhost:8000`, log in as `Administrator` / `admin`
-   (the default password set in `docker-compose.yml`).
-2. Go to your user (top right avatar) → **My Settings** → **API Access** →
-   **Generate Keys**. Copy the API Key and API Secret.
-3. Copy `.env.example` to `.env` in the project root and fill in:
-   ```
-   ERPNEXT_API_KEY=your_key
-   ERPNEXT_API_SECRET=your_secret
-   ```
-4. Rebuild just the frontend so the keys get baked into the build:
-   ```bash
-   docker compose up --build frontend
-   ```
+1. Start MariaDB
+2. Start Redis
+3. Create the ERPNext site
+4. Register the custom `inventory_management` application
+5. Install the custom application
+6. Run database migrations
+7. Configure developer mode
+8. Configure frontend CORS
+9. Start the ERPNext web server
+10. Build and serve the frontend
 
-### 3. Everyday use
+The backend initialization is handled automatically by:
 
-```bash
-docker compose up
+```text
+backend/init-scripts/start.sh
 ```
 
-Visit `http://localhost:8080`. Use the **Admin mode** switch in the header to
-show/hide the add/edit/delete controls (there's no login gate in this build —
-see Assumptions below).
+---
 
-## Features
+# 🔐 ERPNext API Configuration
 
-**Admin**
-- Add / edit / delete inventory items (name, description, image, tags, date added)
+The frontend communicates with ERPNext using API Key and API Secret authentication.
 
-**End user**
-- View items in list or grid layout
-- Search by name or description
-- Sort by date added or name (asc/desc)
-- Filter by tag
-- Empty states for no items / no search results
+## Generate API Credentials
 
-## How it works
+After the backend starts, open:
 
-- The custom `Inventory Item` DocType lives in `backend/apps/inventory_management`
-  and is auto-synced into ERPNext by `bench migrate` on container start — no
-  manual fixture import needed.
-- The Lit frontend calls ERPNext's standard REST API directly
-  (`/api/resource/Inventory Item`), using `filters` / `or_filters` / `order_by`
-  query params for search, tag filtering, and sorting, and
-  `/api/method/upload_file` for image uploads.
-- `app-root` owns all state (items, filters, modal/dialog visibility) and
-  passes data down to small, single-purpose Lit elements (`item-card`,
-  `search-bar`, `sort-bar`, `filter-bar`, `view-toggle`, `item-form-modal`,
-  `confirm-dialog`, `toast-notification`), communicating back up via
-  `CustomEvent`s — no shared/global state library needed at this scale.
+```text
+http://localhost:8000
+```
 
-## Assumptions & implementation notes
+Log in to ERPNext as an administrator.
 
-- **No Figma file was available** for this build, so the UI (a "stockroom /
-  shelf-tag" visual direction: warm paper background, amber accent, pine-green
-  tag pills, monospace dates) was designed from the written requirements. Swap
-  in the real Figma redlines by adjusting `frontend/src/styles/tokens.css` and
-  the component styles.
-- **Tags** are stored as a comma-separated `Data` field on `Inventory Item`
-  rather than a linked child-table of a separate `Tag` DocType. This keeps the
-  REST payloads and the form simple, and still supports filtering via ERPNext's
-  `like` operator. A production version would likely use a `Table MultiSelect`
-  field against a dedicated `Tag` DocType for referential integrity.
-- **Admin vs. end user** is a simple UI toggle in this build, not a real login
-  gate — there's no separate auth flow for the two roles. A real deployment
-  would gate the toggle (or route) behind ERPNext user roles/permissions.
-- **API auth**: the frontend uses an ERPNext API key/secret baked in at build
-  time (see setup step 2). This is simplest for a local/dev assignment; a
-  production app would proxy requests through a backend-for-frontend rather
-  than shipping credentials in a client bundle.
-- **Image storage**: uploaded images are stored on the ERPNext backend itself
-  (via `/api/method/upload_file`) and served from `http://localhost:8000`.
-- The suggested architecture explicitly avoids bundling the frontend into
-  ERPNext's own Frappe app/asset pipeline — the two services stay independent
-  and only talk over REST, per the assignment brief.
+Then navigate to:
 
-## Troubleshooting
+```text
+Administrator
+   ↓
+My Settings
+   ↓
+API Access
+   ↓
+Generate Keys
+```
 
-- **Backend keeps restarting on first boot**: site creation can take a few
-  minutes on a cold MariaDB volume; check `docker compose logs -f backend`.
-- **CORS errors in the browser console**: confirm `FRONTEND_ORIGIN` in
-  `docker-compose.yml` matches the origin you're loading the frontend from.
-- **"To start with, add items to Tags" filter is empty**: the tag filter
-  dropdown is populated from tags already present on existing items — it's
-  empty until at least one item has tags.
+Copy the API Key and API Secret.
+
+## Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+ERPNEXT_API_KEY=your_api_key
+ERPNEXT_API_SECRET=your_api_secret
+```
+
+**Do not commit `.env` to GitHub.** The project `.gitignore` excludes environment files.
+
+## Rebuild Frontend
+
+After configuring the API credentials:
+
+```bash
+docker compose up --build -d frontend
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+---
+
+# ▶️ Everyday Usage
+
+Start the application:
+
+```bash
+docker compose up -d
+```
+
+Check running containers:
+
+```bash
+docker compose ps
+```
+
+Open the frontend:
+
+```text
+http://localhost:8080
+```
+
+Open ERPNext:
+
+```text
+http://localhost:8000
+```
+
+Stop the application:
+
+```bash
+docker compose down
+```
+
+---
+
+# 📦 Inventory Item DocType
+
+The project contains a custom ERPNext/Frappe application named:
+
+```text
+inventory_management
+```
+
+It defines a custom DocType:
+
+```text
+Inventory Item
+```
+
+The DocType supports:
+
+- Item Name
+- Description
+- Image
+- Tags
+- Date Added
+
+The DocType definition is located at:
+
+```text
+backend/apps/inventory_management/
+```
+
+Database migrations are automatically executed during backend startup.
+
+---
+
+# 🔌 REST API
+
+The frontend communicates directly with ERPNext's REST API.
+
+### Get Inventory Items
+
+```http
+GET /api/resource/Inventory%20Item
+```
+
+### Create Inventory Item
+
+```http
+POST /api/resource/Inventory%20Item
+```
+
+### Update Inventory Item
+
+```http
+PUT /api/resource/Inventory%20Item/{name}
+```
+
+### Delete Inventory Item
+
+```http
+DELETE /api/resource/Inventory%20Item/{name}
+```
+
+### Upload Image
+
+```http
+POST /api/method/upload_file
+```
+
+The frontend uses ERPNext REST API query parameters for search, filtering, sorting, and retrieving inventory records.
+
+---
+
+# 🧩 Frontend Component Architecture
+
+The frontend is implemented using reusable Lit components.
+
+The main application component:
+
+```text
+app-root
+```
+
+manages:
+
+- Inventory items
+- Search state
+- Selected filters
+- Sorting
+- View mode
+- Modal visibility
+- Delete confirmation
+- Notifications
+
+Reusable components include:
+
+```text
+search-bar
+filter-bar
+sort-bar
+view-toggle
+item-card
+item-collection
+item-form-modal
+confirm-dialog
+toast-notification
+```
+
+Components communicate using `CustomEvent`s.
+
+A global state-management library is not used because the application is small enough to manage state locally.
+
+---
+
+# 🔄 Application Flow
+
+```text
+User
+ │
+ ▼
+Lit Frontend
+ │
+ │ API Request
+ ▼
+ERPNext REST API
+ │
+ ▼
+Inventory Item DocType
+ │
+ ▼
+MariaDB
+```
+
+For image uploads:
+
+```text
+User
+ │
+ ▼
+Lit Frontend
+ │
+ │ upload_file API
+ ▼
+ERPNext
+ │
+ ▼
+File Storage
+```
+
+---
+
+# 📝 Assumptions & Implementation Notes
+
+## UI Design
+
+No Figma file was available during implementation.
+
+Therefore, the interface was designed from the written assignment requirements using a stockroom/shelf-inspired visual direction.
+
+The main styling tokens are maintained in:
+
+```text
+frontend/src/styles/tokens.css
+```
+
+## Tags
+
+Tags are stored as a comma-separated field on the `Inventory Item` DocType.
+
+This keeps the form and REST payload simple while supporting tag-based filtering.
+
+A production implementation could use a dedicated Tag DocType and relational field for stronger data integrity.
+
+## Admin Mode
+
+The current assignment implementation uses an Admin Mode UI toggle to expose Add, Edit, and Delete functionality.
+
+There is no separate authentication flow between Admin and End User in this assignment build.
+
+For a production deployment, these capabilities should be protected using ERPNext roles and permissions.
+
+## API Authentication
+
+The frontend uses ERPNext API Key and API Secret authentication.
+
+The credentials are supplied through environment variables.
+
+The `.env` file is intentionally excluded from source control.
+
+For production, a backend-for-frontend/proxy architecture would be preferable so API credentials are not exposed to the client application.
+
+## Image Storage
+
+Images are uploaded to ERPNext using:
+
+```text
+/api/method/upload_file
+```
+
+The uploaded files are then served through the ERPNext backend.
+
+## CSRF Configuration
+
+Because this assignment uses a Lit frontend communicating directly with the ERPNext REST API, the local ERPNext site is configured during container initialization to support the frontend integration.
+
+This configuration is intended for the local development/assignment environment and should be reviewed and hardened before production deployment.
+
+## Independent Frontend and Backend
+
+The frontend is intentionally kept separate from ERPNext's internal Frappe asset pipeline.
+
+The two services communicate through REST APIs.
+
+This keeps the architecture modular and makes it easier to replace or extend either side independently.
+
+---
+
+# 🧪 Testing Checklist
+
+The following functionality has been tested:
+
+- [x] Add inventory item
+- [x] Edit inventory item
+- [x] Delete inventory item
+- [x] Upload item image
+- [x] Search by item name
+- [x] Search by description
+- [x] Filter by tag
+- [x] Sort by item name
+- [x] Sort by date added
+- [x] Ascending sorting
+- [x] Descending sorting
+- [x] Grid view
+- [x] List view
+- [x] Empty inventory state
+- [x] No search results state
+- [x] Frontend ↔ ERPNext REST API integration
+- [x] Docker Compose startup
+- [x] MariaDB connectivity
+- [x] Redis connectivity
+- [x] ERPNext custom DocType migration
+
+---
+
+# 🐳 Docker Services
+
+The application consists of:
+
+```text
+frontend
+backend
+mariadb
+redis
+```
+
+Check all services:
+
+```bash
+docker compose ps
+```
+
+View backend logs:
+
+```bash
+docker compose logs -f backend
+```
+
+View frontend logs:
+
+```bash
+docker compose logs -f frontend
+```
+
+View all logs:
+
+```bash
+docker compose logs -f
+```
+
+---
+
+# 🛠️ Troubleshooting
+
+## Backend keeps restarting
+
+Check:
+
+```bash
+docker compose logs -f backend
+```
+
+During the first startup, ERPNext may take several minutes to initialize the site and database.
+
+## Frontend cannot connect to ERPNext
+
+Check:
+
+```bash
+docker compose ps
+```
+
+Then open:
+
+```text
+http://localhost:8000
+```
+
+Verify ERPNext is accessible and that the API credentials in `.env` are correct.
+
+## CORS Error
+
+Make sure the frontend is accessed through:
+
+```text
+http://localhost:8080
+```
+
+The backend is configured to allow the frontend origin.
+
+## API Authentication Error
+
+If the API returns `403`, verify:
+
+- API Key
+- API Secret
+- ERPNext user permissions
+- `.env` configuration
+- Frontend rebuild after changing `.env`
+
+Then rebuild:
+
+```bash
+docker compose up --build -d frontend
+```
+
+## CSRF Error
+
+If a write request returns a CSRF error, rebuild the backend after the ERPNext site configuration changes:
+
+```bash
+docker compose down
+docker compose up --build -d
+```
+
+## Check Backend API Requests
+
+Use:
+
+```bash
+docker compose logs --tail=100 backend
+```
+
+---
+
+# 🔒 Security
+
+The following files and credentials should not be committed:
+
+```text
+.env
+*.log
+```
+
+Never publish:
+
+- ERPNext API Secret
+- Passwords
+- Private credentials
+- Production environment variables
+
+---
+
+# 📌 Production Considerations
+
+This project is designed for a local internship assignment environment.
+
+For production deployment, the following improvements would be recommended:
+
+- Use a backend-for-frontend/API proxy
+- Keep API credentials server-side
+- Implement proper authentication and authorization
+- Use ERPNext role-based permissions
+- Replace the Admin Mode UI toggle with real permissions
+- Use HTTPS
+- Harden CSRF/CORS configuration
+- Use production WSGI/server configuration
+- Add automated tests
+- Add CI/CD
+- Use production database and backup strategy
+- Use proper image/file storage
+- Add monitoring and logging
+
+---
+
+# 📄 Assignment Scope
+
+The application implements the required inventory management functionality.
+
+### Admin
+
+- Create inventory items
+- Update inventory items
+- Delete inventory items
+
+### End User
+
+- Browse inventory
+- Search inventory
+- Filter inventory
+- Sort inventory
+- Switch between Grid and List views
+
+The complete environment can be started using:
+
+```bash
+docker compose up --build
+```
+
+---
+
+# 🔗 Repository
+
+https://github.com/vivekk-patil/inventory-management-app-vivekpatil
+
+---
+
+# 👨‍💻 Author
+
+**Vivek Patil**
+
+Built as part of the **Levelworks Internship Assignment**.
+
+---
+
+## ⭐ Project Summary
+
+**Stockroom** is a modular inventory management application combining:
+
+```text
+Lit
++
+ERPNext / Frappe
++
+REST API
++
+MariaDB
++
+Redis
++
+Docker
+```
+
+The architecture keeps the frontend and backend independent while providing a complete containerized development environment.
